@@ -7,11 +7,11 @@ branding:
   icon: 'git-pull-request'
   color: 'blue'
 
-# inputs:
-#   milliseconds:
-#     description: 'Your input description here'
-#     required: true
-#     default: '1000'
+inputs:
+  title-contains:
+    required: false
+    description: 'What PR title needs to contain. Does not accept regex'
+
 
 # # Define your outputs here.
 # outputs:

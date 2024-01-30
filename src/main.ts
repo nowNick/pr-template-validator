@@ -1,5 +1,19 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import { buildConfigFromInput } from './config'
+import { getPullRequestFromContext } from './pull_request'
+import { ValidationResult, titleValidator, validationRunner } from './validators'
+
+const processResult = (validatorName: string, result: ValidationResult) => {
+  if (result.skipped) {
+    core.debug(`${validatorName}: skipped`)
+  } else {
+    if (result.success) {
+      core.debug(`${validatorName} ✅ --- succeeded with: ${result.message}`)
+    } else {
+      core.setFailed(`${validatorName} ❌ --- failed with: ${result.message}`)
+    }
+  }
+}
 
 /**
  * The main function for the action.
@@ -7,20 +21,14 @@ import { wait } from './wait'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const config = buildConfigFromInput()
+    const pr = getPullRequestFromContext()
+    const runValidation = validationRunner(config, pr, processResult)
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const validators = [titleValidator]
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    validators.forEach(runValidation)
   } catch (error) {
-    // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
   }
 }

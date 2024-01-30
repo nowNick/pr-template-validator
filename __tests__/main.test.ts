@@ -7,20 +7,17 @@
  */
 
 import * as core from '@actions/core'
+import { context } from '@actions/github'
 import * as main from '../src/main'
+import { titleValidator } from '../src/validators'
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
 
-// Other utilities
-const timeRegex = /^\d{2}:\d{2}:\d{2}/
-
 // Mock the GitHub Actions core library
-let debugMock: jest.SpyInstance
 let errorMock: jest.SpyInstance
-let getInputMock: jest.SpyInstance
 let setFailedMock: jest.SpyInstance
-let setOutputMock: jest.SpyInstance
+let debugMock: jest.SpyInstance
 
 describe('action', () => {
   beforeEach(() => {
@@ -28,62 +25,100 @@ describe('action', () => {
 
     debugMock = jest.spyOn(core, 'debug').mockImplementation()
     errorMock = jest.spyOn(core, 'error').mockImplementation()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-    setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
   })
 
-  it('sets the time output', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'milliseconds':
-          return '500'
-        default:
-          return ''
-      }
+  describe('title check', () => {
+    // TODO: change to afterEach
+    afterAll(() => {
+      jest.restoreAllMocks()
     })
 
-    await main.run()
-    expect(runMock).toHaveReturned()
+    it('succeeds if PR title contains text', async () => {
+      const expectedTitleElement = 'XYZ'
 
-    // Verify that all of the core library functions were called correctly
-    expect(debugMock).toHaveBeenNthCalledWith(1, 'Waiting 500 milliseconds ...')
-    expect(debugMock).toHaveBeenNthCalledWith(
-      2,
-      expect.stringMatching(timeRegex)
-    )
-    expect(debugMock).toHaveBeenNthCalledWith(
-      3,
-      expect.stringMatching(timeRegex)
-    )
-    expect(setOutputMock).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      expect.stringMatching(timeRegex)
-    )
-    expect(errorMock).not.toHaveBeenCalled()
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR with XYZ required'
+        }
+      })
+      jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: expectedTitleElement })
+
+      await main.run()
+
+      expect(runMock).toHaveReturned()
+      expect(debugMock).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(`TitleValidator ✅ --- succeeded with: PR Title contains ${expectedTitleElement}`)
+      )
+      expect(errorMock).not.toHaveBeenCalled()
+    })
+
+    it('fails if PR title does not contain text', async () => {
+      const expectedTitleElement = 'ABC'
+
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR with -XYZ- required'
+        }
+      })
+      jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: expectedTitleElement })
+
+      await main.run()
+
+      expect(runMock).toHaveReturned()
+      expect(setFailedMock).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(`TitleValidator ❌ --- failed with: PR Title does not contain ${expectedTitleElement}`)
+      )
+      expect(errorMock).not.toHaveBeenCalled()
+    })
+
+    it('skips if not configured to check PR title', async () => {
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR with -XYZ- required'
+        }
+      })
+      jest.replaceProperty(process, 'env', {})
+
+      await main.run()
+
+      expect(runMock).toHaveReturned()
+      expect(debugMock).toHaveBeenNthCalledWith(1, expect.stringMatching(`TitleValidator: skipped`))
+      expect(errorMock).not.toHaveBeenCalled()
+    })
   })
 
-  it('sets a failed status', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'milliseconds':
-          return 'this is not a number'
-        default:
-          return ''
-      }
+  describe('unknown action error', () => {
+    let titleValidatorMock: jest.SpyInstance
+    beforeEach(() => {
+      jest.clearAllMocks()
+      titleValidatorMock = jest.spyOn(titleValidator, 'validation').mockImplementation()
     })
 
-    await main.run()
-    expect(runMock).toHaveReturned()
+    afterAll(() => {
+      jest.restoreAllMocks()
+    })
 
-    // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds not a number'
-    )
-    expect(errorMock).not.toHaveBeenCalled()
+    it('records error', async () => {
+      titleValidatorMock.mockImplementation(() => {
+        throw new Error('Error from test mock')
+      })
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR with XYZ required'
+        }
+      })
+      jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: 'XYZ' })
+
+      await main.run()
+
+      expect(setFailedMock).toHaveBeenNthCalledWith(1, expect.stringMatching('Error from test mock'))
+    })
   })
 })
