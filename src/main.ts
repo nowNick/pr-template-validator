@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { buildConfigFromInput } from './config'
 import { getPullRequestFromContext } from './pull_request'
-import { ValidationResult, titleValidator, validationRunner } from './validators'
+import { ValidationResult, titleContainsValidator, titleRegexValidator, validationRunner } from './validators'
 
 const processResult = (validatorName: string, result: ValidationResult) => {
   if (result.skipped) {
@@ -21,11 +21,12 @@ const processResult = (validatorName: string, result: ValidationResult) => {
  */
 export async function run(): Promise<void> {
   try {
+    debugger
     const config = buildConfigFromInput()
     const pr = getPullRequestFromContext()
     const runValidation = validationRunner(config, pr, processResult)
 
-    const validators = [titleValidator]
+    const validators = [titleContainsValidator, titleRegexValidator]
 
     validators.forEach(runValidation)
   } catch (error) {

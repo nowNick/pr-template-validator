@@ -3,7 +3,7 @@
  */
 
 import { context } from '@actions/github'
-import { getPullRequestFromContext } from '../src/pull_request'
+import { getPullRequestFromContext } from '../../src/pull_request'
 
 describe('getPullRequestFromContext', () => {
   describe('when run in pr context', () => {

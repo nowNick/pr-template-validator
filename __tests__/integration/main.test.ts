@@ -8,8 +8,8 @@
 
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import * as main from '../src/main'
-import { titleValidator } from '../src/validators'
+import * as main from '../../src/main'
+import { titleContainsValidator } from '../../src/validators'
 
 // Mock the action's main function
 const runMock = jest.spyOn(main, 'run')
@@ -28,7 +28,7 @@ describe('action', () => {
     setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
   })
 
-  describe('title check', () => {
+  describe('title contains check', () => {
     // TODO: change to afterEach
     afterAll(() => {
       jest.restoreAllMocks()
@@ -50,7 +50,7 @@ describe('action', () => {
       expect(runMock).toHaveReturned()
       expect(debugMock).toHaveBeenNthCalledWith(
         1,
-        expect.stringMatching(`TitleValidator ✅ --- succeeded with: PR Title contains ${expectedTitleElement}`)
+        expect.stringMatching(`TitleContainsValidator ✅ --- succeeded with: PR Title contains ${expectedTitleElement}`)
       )
       expect(errorMock).not.toHaveBeenCalled()
     })
@@ -71,7 +71,9 @@ describe('action', () => {
       expect(runMock).toHaveReturned()
       expect(setFailedMock).toHaveBeenNthCalledWith(
         1,
-        expect.stringMatching(`TitleValidator ❌ --- failed with: PR Title does not contain ${expectedTitleElement}`)
+        expect.stringMatching(
+          `TitleContainsValidator ❌ --- failed with: PR Title does not contain ${expectedTitleElement}`
+        )
       )
       expect(errorMock).not.toHaveBeenCalled()
     })
@@ -88,7 +90,7 @@ describe('action', () => {
       await main.run()
 
       expect(runMock).toHaveReturned()
-      expect(debugMock).toHaveBeenNthCalledWith(1, expect.stringMatching(`TitleValidator: skipped`))
+      expect(debugMock).toHaveBeenNthCalledWith(1, expect.stringMatching(`TitleContainsValidator: skipped`))
       expect(errorMock).not.toHaveBeenCalled()
     })
   })
@@ -97,7 +99,7 @@ describe('action', () => {
     let titleValidatorMock: jest.SpyInstance
     beforeEach(() => {
       jest.clearAllMocks()
-      titleValidatorMock = jest.spyOn(titleValidator, 'validation').mockImplementation()
+      titleValidatorMock = jest.spyOn(titleContainsValidator, 'validation').mockImplementation()
     })
 
     afterAll(() => {
@@ -119,6 +121,30 @@ describe('action', () => {
       await main.run()
 
       expect(setFailedMock).toHaveBeenNthCalledWith(1, expect.stringMatching('Error from test mock'))
+    })
+  })
+
+  describe('title regex check', () => {
+    // TODO: change to afterEach
+    afterAll(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('succeeds if PR title matches regex', async () => {
+      const expectedTitleRegex = 'XYZ-[0-9]+'
+
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR with XYZ-123 required'
+        }
+      })
+      jest.replaceProperty(process, 'env', { ['INPUT_TITLE-REGEX']: expectedTitleRegex })
+
+      await main.run()
+
+      expect(debugMock).toHaveBeenNthCalledWith(2, expect.stringMatching(`TitleRegexValidator ✅ --- succeeded with`))
+      expect(errorMock).not.toHaveBeenCalled()
     })
   })
 })

@@ -2,7 +2,6 @@ name: 'PR Template Validtor'
 description: |
   This action allows for verifying if a Pull Request matches required template
 author: 'Mikołaj Nowak <mikolaj.nowak@konghq.com>'
-
 branding:
   icon: 'git-pull-request'
   color: 'blue'
@@ -11,7 +10,9 @@ inputs:
   title-contains:
     required: false
     description: 'What PR title needs to contain. Does not accept regex'
-
+  title-regex:
+    required: false
+    description: 'What PR title needs to match to. Uses regex'
 
 # # Define your outputs here.
 # outputs:

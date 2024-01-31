@@ -19,12 +19,14 @@ export interface Validator {
   validation: (c: Config, p: PullRequest) => ValidationResult
 }
 
+//prettier-ignore
 export const validationRunner =
-  (config: Config, pr: PullRequest, resultProcessor: ResultProcessor) => (validator: Validator) =>
-    resultProcessor(validator.name, validator.validation(config, pr))
+  (config: Config, pr: PullRequest, resultProcessor: ResultProcessor) =>
+    (validator: Validator) =>
+      resultProcessor(validator.name, validator.validation(config, pr))
 
-export const titleValidator: Validator = {
-  name: 'TitleValidator',
+export const titleContainsValidator: Validator = {
+  name: 'TitleContainsValidator',
   validation: (config: Config, pullRequest: PullRequest): ValidationResult => {
     if (config.titleContains === null) {
       return {
@@ -44,6 +46,31 @@ export const titleValidator: Validator = {
       success: false,
       skipped: false,
       message: `PR Title does not contain ${config.titleContains}`
+    }
+  }
+}
+
+export const titleRegexValidator: Validator = {
+  name: 'TitleRegexValidator',
+  validation: (config: Config, pullRequest: PullRequest): ValidationResult => {
+    if (config.titleRegex === null) {
+      return {
+        skipped: true
+      }
+    } else {
+      if (pullRequest.title.match(config.titleRegex)) {
+        return {
+          success: true,
+          skipped: false,
+          message: `PR Title matches ${config.titleRegex}`
+        }
+      }
+
+      return {
+        success: false,
+        skipped: false,
+        message: `PR Title does not match ${config.titleRegex}`
+      }
     }
   }
 }
