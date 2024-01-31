@@ -13,6 +13,9 @@ inputs:
   title-regex:
     required: false
     description: 'What PR title needs to match to. Uses regex'
+  body-contains:
+    required: false
+    description: 'What PR body needs to contain. Does not accept regex'
 
 # # Define your outputs here.
 # outputs:

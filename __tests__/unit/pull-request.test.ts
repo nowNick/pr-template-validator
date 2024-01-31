@@ -3,7 +3,17 @@
  */
 
 import { context } from '@actions/github'
-import { getPullRequestFromContext } from '../../src/pull_request'
+import { getPullRequestFromContext } from '../../src/pull-request'
+
+const PR_body = `### Summary
+This is a test body summary
+
+### Content
+This is test body content
+
+### Issue-Tracker
+XYZ-123
+`
 
 describe('getPullRequestFromContext', () => {
   describe('when run in pr context', () => {
@@ -15,13 +25,15 @@ describe('getPullRequestFromContext', () => {
       jest.replaceProperty(context, 'payload', {
         pull_request: {
           number: 1,
-          title: 'PR with XYZ required'
+          title: 'PR with XYZ required',
+          body: PR_body
         }
       })
 
       const pr = getPullRequestFromContext()
       expect(pr).toEqual({
-        title: 'PR with XYZ required'
+        title: 'PR with XYZ required',
+        body: PR_body
       })
     })
 

@@ -147,4 +147,32 @@ describe('action', () => {
       expect(errorMock).not.toHaveBeenCalled()
     })
   })
+
+  describe('body contains check', () => {
+    // TODO: change to afterEach
+    afterAll(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('succeeds if PR body contains text', async () => {
+      const expectedBodyElement = 'BBODYY'
+
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR test title',
+          body: '### Summary\ntest\n### Description\nSome test desc with BBODYY\n### End\nfinal lines'
+        }
+      })
+      jest.replaceProperty(process, 'env', { ['INPUT_BODY-CONTAINS']: expectedBodyElement })
+
+      await main.run()
+
+      expect(debugMock).toHaveBeenNthCalledWith(
+        3,
+        expect.stringMatching(`BodyContainsValidator ✅ --- succeeded with: PR Body contains ${expectedBodyElement}`)
+      )
+      expect(errorMock).not.toHaveBeenCalled()
+    })
+  })
 })

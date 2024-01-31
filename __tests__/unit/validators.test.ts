@@ -2,11 +2,12 @@
  * Unit tests for validators, src/validators.ts
  */
 
-import { titleContainsValidator, titleRegexValidator } from '../../src/validators'
+import { bodyContainsValidator, titleContainsValidator, titleRegexValidator } from '../../src/validators'
 
 const emptyConfig = {
   titleContains: null,
-  titleRegex: null
+  titleRegex: null,
+  bodyContains: null
 }
 
 describe('titleValidator', () => {
@@ -79,6 +80,64 @@ describe('titleRegex', () => {
           skipped: false,
           success: false,
           message: 'PR Title does not match ^abc-[ab]{3}-.....$'
+        })
+      })
+    })
+  })
+})
+
+describe('bodyContains', () => {
+  describe('when bodyContains was not defined', () => {
+    it('returns skipped validation result', () => {
+      const config = { ...emptyConfig, titleRegex: null }
+      const pullRequest = { title: 'test title', body: 'test body' }
+      expect(bodyContainsValidator.validation(config, pullRequest)).toEqual({
+        skipped: true
+      })
+    })
+  })
+
+  describe('when titleContains was defined', () => {
+    describe('when it matches', () => {
+      it('returns successful validation result', () => {
+        const config = { ...emptyConfig, bodyContains: 'BBOODDYY' }
+        const pullRequest = {
+          title: 'abc-abb-12345',
+          body: 'Long text\nwith newlines\n but contains BBOODDYY\n somewhere'
+        }
+        expect(bodyContainsValidator.validation(config, pullRequest)).toEqual({
+          skipped: false,
+          success: true,
+          message: 'PR Body contains BBOODDYY'
+        })
+      })
+    })
+
+    describe('when it does not match', () => {
+      describe('when body is empty', () => {
+        it('returns failed validation result', () => {
+          const config = { ...emptyConfig, bodyContains: 'BBOODDYY' }
+          const pullRequest = { title: 'test title XYZ' }
+          expect(bodyContainsValidator.validation(config, pullRequest)).toEqual({
+            skipped: false,
+            success: false,
+            message: 'PR Body does not contain BBOODDYY'
+          })
+        })
+      })
+
+      describe('when body is not empty', () => {
+        it('returns failed validation result', () => {
+          const config = { ...emptyConfig, bodyContains: 'BBOODDYY' }
+          const pullRequest = {
+            title: 'test title XYZ',
+            body: 'Long text\nwith newlines\n but does not contain B-B-O-ODD-YY\n somewhere'
+          }
+          expect(bodyContainsValidator.validation(config, pullRequest)).toEqual({
+            skipped: false,
+            success: false,
+            message: 'PR Body does not contain BBOODDYY'
+          })
         })
       })
     })

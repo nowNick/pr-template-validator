@@ -1,5 +1,5 @@
 import { Config } from './config'
-import { PullRequest } from './pull_request'
+import { PullRequest } from './pull-request'
 
 export interface SkippedValidation {
   skipped: true
@@ -70,6 +70,31 @@ export const titleRegexValidator: Validator = {
         success: false,
         skipped: false,
         message: `PR Title does not match ${config.titleRegex}`
+      }
+    }
+  }
+}
+
+export const bodyContainsValidator: Validator = {
+  name: 'BodyContainsValidator',
+  validation: (config: Config, pullRequest: PullRequest): ValidationResult => {
+    if (config.bodyContains === null) {
+      return {
+        skipped: true
+      }
+    } else {
+      if (pullRequest.body && pullRequest.body.includes(config.bodyContains)) {
+        return {
+          success: true,
+          skipped: false,
+          message: `PR Body contains ${config.bodyContains}`
+        }
+      }
+
+      return {
+        success: false,
+        skipped: false,
+        message: `PR Body does not contain ${config.bodyContains}`
       }
     }
   }
