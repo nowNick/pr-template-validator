@@ -99,3 +99,28 @@ export const bodyContainsValidator: Validator = {
     }
   }
 }
+
+export const bodyRegexValidator: Validator = {
+  name: 'BodyRegexValidator',
+  validation: (config: Config, pullRequest: PullRequest): ValidationResult => {
+    if (config.bodyRegex === null) {
+      return {
+        skipped: true
+      }
+    } else {
+      if (pullRequest.body && pullRequest.body.match(config.bodyRegex)) {
+        return {
+          success: true,
+          skipped: false,
+          message: `PR Body matches ${config.bodyRegex}`
+        }
+      }
+
+      return {
+        success: false,
+        skipped: false,
+        message: `PR Body does not match ${config.bodyRegex}`
+      }
+    }
+  }
+}

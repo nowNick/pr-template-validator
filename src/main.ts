@@ -4,6 +4,7 @@ import { getPullRequestFromContext } from './pull-request'
 import {
   ValidationResult,
   bodyContainsValidator,
+  bodyRegexValidator,
   titleContainsValidator,
   titleRegexValidator,
   validationRunner
@@ -31,7 +32,7 @@ export async function run(): Promise<void> {
     const pr = getPullRequestFromContext()
     const runValidation = validationRunner(config, pr, processResult)
 
-    const validators = [titleContainsValidator, titleRegexValidator, bodyContainsValidator]
+    const validators = [titleContainsValidator, titleRegexValidator, bodyContainsValidator, bodyRegexValidator]
 
     validators.forEach(runValidation)
   } catch (error) {

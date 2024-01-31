@@ -17,7 +17,8 @@ describe('buildConfigFromInput', () => {
     expect(config).toEqual({
       titleContains: 'ABC',
       titleRegex: null,
-      bodyContains: null
+      bodyContains: null,
+      bodyRegex: null
     })
   })
 
@@ -29,7 +30,8 @@ describe('buildConfigFromInput', () => {
     expect(config).toEqual({
       titleContains: null,
       titleRegex: '^[a-z]{3}.*$',
-      bodyContains: null
+      bodyContains: null,
+      bodyRegex: null
     })
   })
 
@@ -41,7 +43,21 @@ describe('buildConfigFromInput', () => {
     expect(config).toEqual({
       titleContains: null,
       titleRegex: null,
-      bodyContains: 'BBOODDYY'
+      bodyContains: 'BBOODDYY',
+      bodyRegex: null
+    })
+  })
+
+  it('reads bodyRegex from action input', () => {
+    jest.replaceProperty(process, 'env', { ['INPUT_BODY-REGEX']: 'XYZ-\\d+' })
+
+    const config = buildConfigFromInput()
+
+    expect(config).toEqual({
+      titleContains: null,
+      titleRegex: null,
+      bodyContains: null,
+      bodyRegex: 'XYZ-\\d+'
     })
   })
 })

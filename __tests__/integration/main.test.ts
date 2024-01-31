@@ -175,4 +175,32 @@ describe('action', () => {
       expect(errorMock).not.toHaveBeenCalled()
     })
   })
+
+  describe('body regex check', () => {
+    // TODO: change to afterEach
+    afterAll(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('succeeds if PR body matches regex', async () => {
+      const expectedBodyRegex = 'XYZ-[0-9]+'
+
+      jest.replaceProperty(context, 'payload', {
+        pull_request: {
+          number: 1,
+          title: 'PR test title',
+          body: '### Summary\ntest\n### Description\nSome test desc with XYZ-01234\n### End\nfinal lines'
+        }
+      })
+      jest.replaceProperty(process, 'env', { ['INPUT_BODY-REGEX']: expectedBodyRegex })
+
+      await main.run()
+
+      expect(debugMock).toHaveBeenNthCalledWith(
+        4,
+        expect.stringMatching(`BodyRegexValidator ✅ --- succeeded with: PR Body matches`)
+      )
+      expect(errorMock).not.toHaveBeenCalled()
+    })
+  })
 })
