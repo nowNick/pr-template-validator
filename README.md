@@ -21,7 +21,7 @@ Add this configuration to your workflow configuration at `.github/workflows`.
 name: Pull Request Template Validation
 on:
   pull_request:
-    types: [opened, edited, labeled, unlabeled]
+    types: [opened, edited, synchronize, labeled, unlabeled]
 
 jobs:
   pr-template-validation:
@@ -31,7 +31,7 @@ jobs:
     if: ${{ !contains(github.event.*.labels.*.name, 'skip-pr-template-validation') }}
     steps:
       - name: Validate PR Title & Body
-        uses: nowNick/pr-template-validator@master
+        uses: nowNick/pr-template-validator@main
         with:
           title-contains: 'XYZ-'
           body-regex: 'ABC-\d+'
