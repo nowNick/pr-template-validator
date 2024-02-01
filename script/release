@@ -27,17 +27,17 @@ if [[ -z "$latest_tag" ]]; then
 fi
 
 echo -e "The latest release tag is: ${BLUE}${latest_tag}${OFF}"
-read -r -p 'New Release Tag (vX.X.X format): ' new_tag
+read -r -p 'New Release Tag (X.X.X format): ' new_tag
 
-tag_regex='v[0-9]+\.[0-9]+\.[0-9]+$'
+tag_regex='[0-9]+\.[0-9]+\.[0-9]+$'
 if echo "$new_tag" | grep -q -E "$tag_regex"; then
     echo -e "Tag: ${BLUE}$new_tag${OFF} is valid"
 else
-    echo -e "Tag: ${BLUE}$new_tag${OFF} is ${RED}not valid${OFF} (must be in vX.X.X format)"
+    echo -e "Tag: ${BLUE}$new_tag${OFF} is ${RED}not valid${OFF} (must be in X.X.X format)"
     exit 1
 fi
 
-git tag -a "$new_tag" -m "$new_tag Release"
+git tag -s "$new_tag" -m "$new_tag Release"
 
 echo -e "${GREEN}OK${OFF} - Tagged: $new_tag"
 
