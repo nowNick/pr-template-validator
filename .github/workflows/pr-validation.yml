@@ -1,0 +1,16 @@
+name: Pull Request Template Validation
+on:
+  pull_request:
+    types: [opened, edited, synchronize, labeled, unlabeled]
+
+jobs:
+  pr-template-validation:
+    name: Validates if PR title and body matches template
+    runs-on: ubuntu-latest
+    # Don't run on PRs labeled as exception
+    if: ${{ !contains(github.event.*.labels.*.name, 'skip-pr-template-validation') && github.event.pull_request.user.login != 'dependabot' }}
+    steps:
+      - name: Validate PR Title & Body
+        uses: nowNick/pr-template-validator@main
+        with:
+          body-regex: '(Summary|Description)'
