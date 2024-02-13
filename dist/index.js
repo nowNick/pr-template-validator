@@ -28937,20 +28937,64 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.buildConfigFromInput = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const nullOr = (v) => (v === '' ? null : v);
-const buildConfigFromInput = () => {
-    const inputTitleContains = core.getInput('title-contains');
-    const inputTitleRegex = core.getInput('title-regex');
-    const inputBodyContains = core.getInput('body-contains');
-    const inputBodyRegex = core.getInput('body-regex');
-    return {
-        titleContains: nullOr(inputTitleContains),
-        titleRegex: nullOr(inputTitleRegex),
-        bodyContains: nullOr(inputBodyContains),
-        bodyRegex: nullOr(inputBodyRegex)
-    };
-};
+const buildConfigFromInput = () => ({
+    titleContains: core.getInput('title-contains'),
+    titleRegex: core.getInput('title-regex'),
+    bodyContains: core.getInput('body-contains'),
+    bodyRegex: core.getInput('body-regex')
+});
 exports.buildConfigFromInput = buildConfigFromInput;
+
+
+/***/ }),
+
+/***/ 6144:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+/**
+ * The entrypoint for the action.
+ */
+const core = __importStar(__nccwpck_require__(2186));
+const main_1 = __nccwpck_require__(399);
+async function run() {
+    try {
+        (0, main_1.executeAction)();
+    }
+    catch (error) {
+        if (error instanceof Error)
+            core.setFailed(error.message);
+    }
+}
+exports.run = run;
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+run();
 
 
 /***/ }),
@@ -28984,7 +29028,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.executeAction = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const config_1 = __nccwpck_require__(6373);
 const pull_request_1 = __nccwpck_require__(4773);
@@ -29002,24 +29046,14 @@ const processResult = (validatorName, result) => {
         }
     }
 };
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
-async function run() {
-    try {
-        const config = (0, config_1.buildConfigFromInput)();
-        const pr = (0, pull_request_1.getPullRequestFromContext)();
-        const runValidation = (0, validators_1.validationRunner)(config, pr, processResult);
-        const validators = [validators_1.titleContainsValidator, validators_1.titleRegexValidator, validators_1.bodyContainsValidator, validators_1.bodyRegexValidator];
-        validators.forEach(runValidation);
-    }
-    catch (error) {
-        if (error instanceof Error)
-            core.setFailed(error.message);
-    }
-}
-exports.run = run;
+const executeAction = () => {
+    const config = (0, config_1.buildConfigFromInput)();
+    const pr = (0, pull_request_1.getPullRequestFromContext)();
+    const runValidation = (0, validators_1.validationRunner)(config, pr, processResult);
+    const validators = [validators_1.titleContainsValidator, validators_1.titleRegexValidator, validators_1.bodyContainsValidator, validators_1.bodyRegexValidator];
+    validators.forEach(runValidation);
+};
+exports.executeAction = executeAction;
 
 
 /***/ }),
@@ -29033,12 +29067,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getPullRequestFromContext = void 0;
 const github_1 = __nccwpck_require__(5438);
 const getPullRequestFromContext = () => {
-    if (github_1.context.payload.pull_request === undefined) {
+    if (!github_1.context.payload.pull_request) {
         throw new Error('The action does not run in pull request context!');
     }
     const title = github_1.context.payload.pull_request.title;
     const body = github_1.context.payload.pull_request.body;
-    if (title === undefined) {
+    if (!title) {
         throw new Error('Pull request does not have a title!');
     }
     return {
@@ -29064,7 +29098,7 @@ exports.validationRunner = validationRunner;
 exports.titleContainsValidator = {
     name: 'TitleContainsValidator',
     validation: (config, pullRequest) => {
-        if (config.titleContains === null) {
+        if (!config.titleContains) {
             return {
                 skipped: true
             };
@@ -29072,13 +29106,10 @@ exports.titleContainsValidator = {
         if (pullRequest.title.includes(config.titleContains)) {
             return {
                 success: true,
-                skipped: false,
                 message: `PR Title contains ${config.titleContains}`
             };
         }
         return {
-            success: false,
-            skipped: false,
             message: `PR Title does not contain ${config.titleContains}`
         };
     }
@@ -29086,7 +29117,7 @@ exports.titleContainsValidator = {
 exports.titleRegexValidator = {
     name: 'TitleRegexValidator',
     validation: (config, pullRequest) => {
-        if (config.titleRegex === null) {
+        if (!config.titleRegex) {
             return {
                 skipped: true
             };
@@ -29095,13 +29126,10 @@ exports.titleRegexValidator = {
             if (pullRequest.title.match(config.titleRegex)) {
                 return {
                     success: true,
-                    skipped: false,
                     message: `PR Title matches ${config.titleRegex}`
                 };
             }
             return {
-                success: false,
-                skipped: false,
                 message: `PR Title does not match ${config.titleRegex}`
             };
         }
@@ -29110,22 +29138,19 @@ exports.titleRegexValidator = {
 exports.bodyContainsValidator = {
     name: 'BodyContainsValidator',
     validation: (config, pullRequest) => {
-        if (config.bodyContains === null) {
+        if (!config.bodyContains) {
             return {
                 skipped: true
             };
         }
         else {
-            if (pullRequest.body && pullRequest.body.includes(config.bodyContains)) {
+            if (pullRequest?.body?.includes(config.bodyContains)) {
                 return {
                     success: true,
-                    skipped: false,
                     message: `PR Body contains ${config.bodyContains}`
                 };
             }
             return {
-                success: false,
-                skipped: false,
                 message: `PR Body does not contain ${config.bodyContains}`
             };
         }
@@ -29134,22 +29159,19 @@ exports.bodyContainsValidator = {
 exports.bodyRegexValidator = {
     name: 'BodyRegexValidator',
     validation: (config, pullRequest) => {
-        if (config.bodyRegex === null) {
+        if (!config.bodyRegex) {
             return {
                 skipped: true
             };
         }
         else {
-            if (pullRequest.body && pullRequest.body.match(config.bodyRegex)) {
+            if (pullRequest?.body?.match(config.bodyRegex)) {
                 return {
                     success: true,
-                    skipped: false,
                     message: `PR Body matches ${config.bodyRegex}`
                 };
             }
             return {
-                success: false,
-                skipped: false,
                 message: `PR Body does not match ${config.bodyRegex}`
             };
         }
@@ -31040,22 +31062,12 @@ module.exports = parseParams
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
-"use strict";
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * The entrypoint for the action.
- */
-const main_1 = __nccwpck_require__(399);
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-(0, main_1.run)();
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;

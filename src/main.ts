@@ -22,20 +22,12 @@ const processResult = (validatorName: string, result: ValidationResult): void =>
   }
 }
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
-export async function run(): Promise<void> {
-  try {
-    const config = buildConfigFromInput()
-    const pr = getPullRequestFromContext()
-    const runValidation = validationRunner(config, pr, processResult)
+export const executeAction = (): void => {
+  const config = buildConfigFromInput()
+  const pr = getPullRequestFromContext()
+  const runValidation = validationRunner(config, pr, processResult)
 
-    const validators = [titleContainsValidator, titleRegexValidator, bodyContainsValidator, bodyRegexValidator]
+  const validators = [titleContainsValidator, titleRegexValidator, bodyContainsValidator, bodyRegexValidator]
 
-    validators.forEach(runValidation)
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
-  }
+  validators.forEach(runValidation)
 }

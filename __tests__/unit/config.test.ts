@@ -9,16 +9,23 @@ describe('buildConfigFromInput', () => {
     jest.restoreAllMocks()
   })
 
+  it('reads empty action input', () => {
+    const config = buildConfigFromInput()
+    expect(config).toEqual({
+      titleContains: '',
+      titleRegex: '',
+      bodyContains: '',
+      bodyRegex: ''
+    })
+  })
+
   it('reads titleContains from action input', () => {
     jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: 'ABC' })
 
     const config = buildConfigFromInput()
 
-    expect(config).toEqual({
-      titleContains: 'ABC',
-      titleRegex: null,
-      bodyContains: null,
-      bodyRegex: null
+    expect(config).toMatchObject({
+      titleContains: 'ABC'
     })
   })
 
@@ -27,11 +34,8 @@ describe('buildConfigFromInput', () => {
 
     const config = buildConfigFromInput()
 
-    expect(config).toEqual({
-      titleContains: null,
-      titleRegex: '^[a-z]{3}.*$',
-      bodyContains: null,
-      bodyRegex: null
+    expect(config).toMatchObject({
+      titleRegex: '^[a-z]{3}.*$'
     })
   })
 
@@ -40,11 +44,8 @@ describe('buildConfigFromInput', () => {
 
     const config = buildConfigFromInput()
 
-    expect(config).toEqual({
-      titleContains: null,
-      titleRegex: null,
-      bodyContains: 'BBOODDYY',
-      bodyRegex: null
+    expect(config).toMatchObject({
+      bodyContains: 'BBOODDYY'
     })
   })
 
@@ -53,10 +54,7 @@ describe('buildConfigFromInput', () => {
 
     const config = buildConfigFromInput()
 
-    expect(config).toEqual({
-      titleContains: null,
-      titleRegex: null,
-      bodyContains: null,
+    expect(config).toMatchObject({
       bodyRegex: 'XYZ-\\d+'
     })
   })
