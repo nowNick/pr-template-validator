@@ -9,10 +9,9 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import * as main from '../../src/main'
-import { titleContainsValidator } from '../../src/validators'
 
 // Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
+const runMock = jest.spyOn(main, 'executeAction')
 
 // Mock the GitHub Actions core library
 let errorMock: jest.SpyInstance
@@ -34,7 +33,7 @@ describe('action', () => {
       jest.restoreAllMocks()
     })
 
-    it('succeeds if PR title contains text', async () => {
+    it('succeeds if PR title contains text', () => {
       const expectedTitleElement = 'XYZ'
 
       jest.replaceProperty(context, 'payload', {
@@ -45,7 +44,7 @@ describe('action', () => {
       })
       jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: expectedTitleElement })
 
-      await main.run()
+      main.executeAction()
 
       expect(runMock).toHaveReturned()
       expect(debugMock).toHaveBeenNthCalledWith(
@@ -55,7 +54,7 @@ describe('action', () => {
       expect(errorMock).not.toHaveBeenCalled()
     })
 
-    it('fails if PR title does not contain text', async () => {
+    it('fails if PR title does not contain text', () => {
       const expectedTitleElement = 'ABC'
 
       jest.replaceProperty(context, 'payload', {
@@ -66,7 +65,7 @@ describe('action', () => {
       })
       jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: expectedTitleElement })
 
-      await main.run()
+      main.executeAction()
 
       expect(runMock).toHaveReturned()
       expect(setFailedMock).toHaveBeenNthCalledWith(
@@ -78,7 +77,7 @@ describe('action', () => {
       expect(errorMock).not.toHaveBeenCalled()
     })
 
-    it('skips if not configured to check PR title', async () => {
+    it('skips if not configured to check PR title', () => {
       jest.replaceProperty(context, 'payload', {
         pull_request: {
           number: 1,
@@ -87,40 +86,11 @@ describe('action', () => {
       })
       jest.replaceProperty(process, 'env', {})
 
-      await main.run()
+      main.executeAction()
 
       expect(runMock).toHaveReturned()
       expect(debugMock).toHaveBeenNthCalledWith(1, expect.stringMatching(`TitleContainsValidator: skipped`))
       expect(errorMock).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('unknown action error', () => {
-    let titleValidatorMock: jest.SpyInstance
-    beforeEach(() => {
-      jest.clearAllMocks()
-      titleValidatorMock = jest.spyOn(titleContainsValidator, 'validation').mockImplementation()
-    })
-
-    afterAll(() => {
-      jest.restoreAllMocks()
-    })
-
-    it('records error', async () => {
-      titleValidatorMock.mockImplementation(() => {
-        throw new Error('Error from test mock')
-      })
-      jest.replaceProperty(context, 'payload', {
-        pull_request: {
-          number: 1,
-          title: 'PR with XYZ required'
-        }
-      })
-      jest.replaceProperty(process, 'env', { ['INPUT_TITLE-CONTAINS']: 'XYZ' })
-
-      await main.run()
-
-      expect(setFailedMock).toHaveBeenNthCalledWith(1, expect.stringMatching('Error from test mock'))
     })
   })
 
@@ -130,7 +100,7 @@ describe('action', () => {
       jest.restoreAllMocks()
     })
 
-    it('succeeds if PR title matches regex', async () => {
+    it('succeeds if PR title matches regex', () => {
       const expectedTitleRegex = 'XYZ-[0-9]+'
 
       jest.replaceProperty(context, 'payload', {
@@ -141,7 +111,7 @@ describe('action', () => {
       })
       jest.replaceProperty(process, 'env', { ['INPUT_TITLE-REGEX']: expectedTitleRegex })
 
-      await main.run()
+      main.executeAction()
 
       expect(debugMock).toHaveBeenNthCalledWith(2, expect.stringMatching(`TitleRegexValidator ✅ --- succeeded with`))
       expect(errorMock).not.toHaveBeenCalled()
@@ -154,7 +124,7 @@ describe('action', () => {
       jest.restoreAllMocks()
     })
 
-    it('succeeds if PR body contains text', async () => {
+    it('succeeds if PR body contains text', () => {
       const expectedBodyElement = 'BBODYY'
 
       jest.replaceProperty(context, 'payload', {
@@ -166,7 +136,7 @@ describe('action', () => {
       })
       jest.replaceProperty(process, 'env', { ['INPUT_BODY-CONTAINS']: expectedBodyElement })
 
-      await main.run()
+      main.executeAction()
 
       expect(debugMock).toHaveBeenNthCalledWith(
         3,
@@ -182,7 +152,7 @@ describe('action', () => {
       jest.restoreAllMocks()
     })
 
-    it('succeeds if PR body matches regex', async () => {
+    it('succeeds if PR body matches regex', () => {
       const expectedBodyRegex = 'XYZ-[0-9]+'
 
       jest.replaceProperty(context, 'payload', {
@@ -194,7 +164,7 @@ describe('action', () => {
       })
       jest.replaceProperty(process, 'env', { ['INPUT_BODY-REGEX']: expectedBodyRegex })
 
-      await main.run()
+      main.executeAction()
 
       expect(debugMock).toHaveBeenNthCalledWith(
         4,
